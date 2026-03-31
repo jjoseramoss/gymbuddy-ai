@@ -90,14 +90,14 @@ export default function CoachPage() {
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[color:var(--gb-bg)] text-[color:var(--gb-fg)]">
       <TopBar
         title="AI Coach"
         right={
           <button
             type="button"
             onClick={clear}
-            className="rounded-xl border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5"
+            className="rounded-xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-3 py-2 text-xs font-medium hover:bg-[color:var(--gb-card-strong)]"
           >
             Clear
           </button>
@@ -107,15 +107,15 @@ export default function CoachPage() {
       <main className="flex min-h-[calc(100dvh-3.5rem-5rem)] flex-col md:min-h-[calc(100dvh-4rem)] md:px-6 md:pt-8">
         <div className="mb-4 hidden items-center justify-between md:flex">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">AI Coach</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Mock coaching chat (until OpenAI is wired).
+            <p className="font-mono text-xs tracking-[0.25em] text-[color:var(--gb-muted)]">
+              AI BUDDY
             </p>
+            <h1 className="mt-2 font-mono text-3xl tracking-tight">Coach</h1>
           </div>
           <button
             type="button"
             onClick={clear}
-            className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5"
+            className="rounded-xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--gb-card-strong)]"
           >
             Clear
           </button>
@@ -136,8 +136,8 @@ export default function CoachPage() {
                   className={cn(
                     "max-w-[85%] rounded-3xl px-4 py-3 text-sm shadow-sm",
                     isUser
-                      ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
-                      : "border border-zinc-200/70 bg-white text-zinc-900 dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50"
+                      ? "bg-[color:var(--gb-fg)] text-[color:var(--gb-bg)]"
+                      : "border border-[var(--gb-border)] bg-[color:var(--gb-card)] text-[color:var(--gb-fg)] backdrop-blur"
                   )}
                 >
                   {m.content}
@@ -147,14 +147,14 @@ export default function CoachPage() {
           })}
         </div>
 
-        <div className="border-t border-zinc-200/70 bg-white/80 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-black/70 md:rounded-3xl md:border md:border-zinc-200/70 md:bg-white md:dark:border-white/10 md:dark:bg-zinc-950">
+        <div className="border-t border-[var(--gb-border)] bg-[color:var(--gb-bg)]/80 px-4 py-3 backdrop-blur md:rounded-3xl md:border md:bg-[color:var(--gb-card)]">
           <div className="flex items-end gap-2">
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={1}
               placeholder="Ask something..."
-              className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
+              className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-4 py-3 text-sm outline-none focus:border-[color:var(--gb-accent)]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -166,12 +166,12 @@ export default function CoachPage() {
               type="button"
               disabled={!canSend}
               onClick={send}
-              className="h-[44px] rounded-2xl bg-zinc-950 px-4 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-zinc-950"
+              className="h-[44px] rounded-2xl bg-[color:var(--gb-accent)] px-4 text-sm font-semibold text-[color:var(--gb-accent-fg)] disabled:opacity-50"
             >
               Send
             </button>
           </div>
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mt-2 text-xs text-[color:var(--gb-muted)]">
             Mock coach for now. Later we’ll connect OpenAI.
           </p>
         </div>

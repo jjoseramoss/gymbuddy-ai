@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { TopBar } from "@/components/TopBar";
-import { loadWorkouts } from "@/lib/storage";
 import type { Workout } from "@/lib/types";
+import { useWorkouts } from "@/lib/useWorkouts";
 
 export default function WorkoutsPage() {
-  const [workouts] = useState<Workout[]>(() => loadWorkouts());
+  const workouts = useWorkouts() as Workout[];
 
   const total = workouts.length;
   const last7 = useMemo(() => {
@@ -20,13 +20,13 @@ export default function WorkoutsPage() {
   }, [workouts]);
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[color:var(--gb-bg)] text-[color:var(--gb-fg)]">
       <TopBar
         title="Workouts"
         right={
           <Link
             href="/workouts/new"
-            className="rounded-xl bg-zinc-950 px-3 py-2 text-xs font-medium text-white dark:bg-white dark:text-zinc-950"
+            className="rounded-xl bg-[color:var(--gb-fg)] px-3 py-2 text-xs font-medium text-[color:var(--gb-bg)]"
           >
             New
           </Link>
@@ -36,62 +36,56 @@ export default function WorkoutsPage() {
       <main className="px-4 pt-4 md:px-6 md:pt-8">
         <div className="mb-4 hidden items-center justify-between md:flex">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Workouts</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Your recent training logs.
+            <p className="font-mono text-xs tracking-[0.25em] text-[color:var(--gb-muted)]">
+              WORKOUT LOGGING
             </p>
+            <h1 className="mt-2 font-mono text-3xl tracking-tight">Workouts</h1>
           </div>
           <Link
             href="/workouts/new"
-            className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-zinc-950"
+            className="rounded-2xl bg-[color:var(--gb-accent)] px-5 py-3 text-sm font-semibold text-[color:var(--gb-accent-fg)]"
           >
             New workout
           </Link>
         </div>
 
         <section className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="rounded-3xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
               Total
             </p>
-            <p className="mt-1 text-2xl font-semibold tracking-tight">
-              {total}
-            </p>
+            <p className="mt-3 font-mono text-4xl leading-none">{total}</p>
           </div>
-          <div className="rounded-2xl border border-zinc-200/70 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="rounded-3xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
               Last 7 days
             </p>
-            <p className="mt-1 text-2xl font-semibold tracking-tight">
-              {last7}
-            </p>
+            <p className="mt-3 font-mono text-4xl leading-none">{last7}</p>
           </div>
         </section>
 
         <section className="mt-4 space-y-3">
           {workouts.length === 0 ? (
-            <div className="rounded-3xl border border-zinc-200/70 bg-white p-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-400">
+            <div className="rounded-3xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 text-center text-sm text-[color:var(--gb-muted)] backdrop-blur">
               No workouts yet. Tap “New” to log your first one.
             </div>
           ) : (
             workouts.map((w) => (
               <div
                 key={w.id}
-                className="rounded-3xl border border-zinc-200/70 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-950"
+                className="rounded-3xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-semibold tracking-tight">
-                      {w.title}
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-base font-semibold tracking-tight">{w.title}</p>
+                    <p className="mt-2 font-mono text-[10px] tracking-[0.22em] text-[color:var(--gb-muted)]">
                       {new Date(w.completedAt).toLocaleDateString()} · {w.exercises.length} exercise{w.exercises.length === 1 ? "" : "s"}
                     </p>
                   </div>
                 </div>
 
                 {w.notes ? (
-                  <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
+                  <p className="mt-3 text-sm text-[color:var(--gb-muted)]">
                     {w.notes}
                   </p>
                 ) : null}
@@ -100,11 +94,13 @@ export default function WorkoutsPage() {
                   {w.exercises.slice(0, 3).map((ex, idx) => (
                     <div
                       key={`${w.id}-${idx}`}
-                      className="rounded-2xl bg-zinc-50 px-3 py-2 text-xs text-zinc-700 dark:bg-white/5 dark:text-zinc-200"
+                      className="rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-card-strong)] px-3 py-2 text-xs"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{ex.name}</span>
-                        <span className="text-zinc-500 dark:text-zinc-400">
+                        <span className="font-medium text-[color:var(--gb-fg)]">
+                          {ex.name}
+                        </span>
+                        <span className="text-[color:var(--gb-muted)]">
                           {ex.sets.length} set{ex.sets.length === 1 ? "" : "s"}
                         </span>
                       </div>
@@ -134,8 +130,8 @@ export default function WorkoutsPage() {
                                 <span
                                   className={
                                     isMax
-                                      ? "font-semibold text-emerald-700 dark:text-emerald-400"
-                                      : "text-zinc-600 dark:text-zinc-300"
+                                      ? "font-semibold text-[color:var(--gb-fg)]"
+                                      : "text-[color:var(--gb-muted)]"
                                   }
                                 >
                                   {(s.reps ?? "?") + " reps"}

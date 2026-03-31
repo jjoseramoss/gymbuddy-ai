@@ -2,27 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Dumbbell, Home, MessageCircle, User } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
 const links = [
-  { href: "/home", label: "Home" },
-  { href: "/workouts", label: "Workouts" },
-  { href: "/coach", label: "Coach" },
-  { href: "/profile", label: "Profile" },
+  { href: "/home", label: "Home", Icon: Home },
+  { href: "/workouts", label: "Workouts", Icon: Dumbbell },
+  { href: "/coach", label: "Coach", Icon: MessageCircle },
+  { href: "/profile", label: "Profile", Icon: User },
 ] as const;
 
 export function DesktopNav() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-black/70 md:block">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/home" className="font-semibold tracking-tight">
-          GymBuddy
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-[var(--gb-border)] bg-[color:var(--gb-bg)]/70 backdrop-blur md:block">
+      <div className="flex h-full flex-col p-5">
+        <Link href="/home" className="font-mono text-sm tracking-[0.25em]">
+          GYMBUDDY
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="mt-6 grid gap-1">
           {links.map((l) => {
             const isActive = pathname === l.href || pathname.startsWith(`${l.href}/`);
             return (
@@ -30,27 +31,28 @@ export function DesktopNav() {
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white"
+                    ? "bg-[color:var(--gb-card-strong)] text-[color:var(--gb-fg)]"
+                    : "text-[color:var(--gb-muted)] hover:bg-[color:var(--gb-card)] hover:text-[color:var(--gb-fg)]"
                 )}
               >
+                <l.Icon className="h-4 w-4" />
                 {l.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="mt-auto">
           <Link
             href="/workouts/new"
-            className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-zinc-950"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-[color:var(--gb-fg)] px-4 py-3 text-sm font-semibold text-[color:var(--gb-bg)]"
           >
             Log workout
           </Link>
         </div>
       </div>
-    </header>
+    </aside>
   );
 }

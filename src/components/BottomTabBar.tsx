@@ -17,7 +17,7 @@ export function BottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200/70 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-black/70">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--gb-border)] bg-[color:var(--gb-bg)]/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-md items-center justify-between px-4 pb-[max(0px,env(safe-area-inset-bottom))]">
         {tabs.map(({ href, label, Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -28,8 +28,8 @@ export function BottomTabBar() {
               className={cn(
                 "flex w-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs transition-colors",
                 isActive
-                  ? "text-zinc-950 dark:text-white"
-                  : "text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                  ? "text-[color:var(--gb-fg)]"
+                  : "text-[color:var(--gb-muted)] hover:text-[color:var(--gb-fg)]"
               )}
             >
               <Icon

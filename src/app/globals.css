@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --gb-bg: #f1f0e1;
+  --gb-fg: #101015;
+  --gb-muted: rgba(16, 16, 21, 0.7);
+  --gb-border: rgba(16, 16, 21, 0.12);
+  --gb-card: rgba(16, 16, 21, 0.04);
+  --gb-card-strong: rgba(16, 16, 21, 0.07);
+  --gb-accent: #506385;
+  --gb-accent-fg: #f1f0e1;
 }
 
 @theme inline {
@@ -16,6 +25,15 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --gb-bg: #101015;
+    --gb-fg: #f1f0e1;
+    --gb-muted: rgba(241, 240, 225, 0.7);
+    --gb-border: rgba(241, 240, 225, 0.12);
+    --gb-card: rgba(241, 240, 225, 0.04);
+    --gb-card-strong: rgba(241, 240, 225, 0.07);
+    --gb-accent: #506385;
+    --gb-accent-fg: #f1f0e1;
   }
 }
 
@@ -53,5 +71,43 @@ body {
   .gb-animate {
     animation: none !important;
     transform: none !important;
+  }
+}
+
+.gb-card {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gb-card:hover {
+  transform: translate3d(0, -2px, 0);
+  background-color: var(--gb-card-strong);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.gb-btn {
+  transition:
+    transform 160ms ease,
+    filter 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.gb-btn:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-card,
+  .gb-btn {
+    transition: none;
+  }
+
+  .gb-card:hover,
+  .gb-btn:hover {
+    transform: none;
   }
 }

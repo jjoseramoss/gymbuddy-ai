@@ -72,11 +72,39 @@ export function loadWorkouts(): Workout[] {
 
 export function saveWorkouts(workouts: Workout[]) {
   window.localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
+  window.dispatchEvent(new Event("gymbuddy:workouts"));
 }
 
 export function addWorkout(workout: Workout) {
   const workouts = loadWorkouts();
   saveWorkouts([workout, ...workouts]);
+}
+
+export function subscribeWorkouts(onChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key !== WORKOUTS_KEY) return;
+    onChange();
+  };
+
+  const handleFocus = () => onChange();
+  const handleLocal = () => onChange();
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") onChange();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener("focus", handleFocus);
+  window.addEventListener("gymbuddy:workouts", handleLocal);
+  document.addEventListener("visibilitychange", handleVisibility);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener("focus", handleFocus);
+    window.removeEventListener("gymbuddy:workouts", handleLocal);
+    document.removeEventListener("visibilitychange", handleVisibility);
+  };
 }
 
 export function loadChat(): ChatMessage[] {

@@ -38,12 +38,22 @@ export default function NewWorkoutPage() {
   const [notes, setNotes] = useState("");
   const [exercises, setExercises] = useState<ExerciseDraft[]>([emptyExercise()]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canSave = useMemo(() => {
     if (!title.trim()) return false;
     const anyNamed = exercises.some((e) => e.name.trim());
     if (!anyNamed) return false;
     return exercises.every((e) => !e.name.trim() || e.name.trim().length >= 2);
+  }, [exercises, title]);
+
+  const validationError = useMemo(() => {
+    if (!title.trim()) return "Add a workout title.";
+    const anyNamed = exercises.some((e) => e.name.trim());
+    if (!anyNamed) return "Add at least one exercise.";
+    const shortName = exercises.find((e) => e.name.trim() && e.name.trim().length < 2);
+    if (shortName) return "Exercise names must be at least 2 characters.";
+    return null;
   }, [exercises, title]);
 
   function updateExercise(index: number, patch: Partial<ExerciseDraft>) {
@@ -83,7 +93,11 @@ export default function NewWorkoutPage() {
   }
 
   async function onSave() {
-    if (!canSave) return;
+    setError(null);
+    if (!canSave) {
+      setError(validationError ?? "Missing required fields.");
+      return;
+    }
     setSaving(true);
 
     const parsedExercises: Exercise[] = exercises
@@ -108,67 +122,81 @@ export default function NewWorkoutPage() {
       notes: notes.trim() ? notes.trim() : undefined,
     };
 
-    addWorkout(workout);
-    router.push("/workouts");
+    try {
+      addWorkout(workout);
+      router.push("/workouts");
+    } catch (e) {
+      setSaving(false);
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not save workout. Is local storage available?"
+      );
+    }
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[color:var(--gb-bg)] text-[color:var(--gb-fg)]">
       <TopBar title="Log workout" />
 
-      <main className="px-4 pt-4 md:px-6 md:pt-8">
+      <main className="px-4 pt-4 md:px-12 md:pt-12">
         <div className="mb-4 hidden items-center justify-between md:flex">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Log workout</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Save a workout to local storage.
+            <p className="font-mono text-xs tracking-[0.25em] text-[color:var(--gb-muted)]">
+              WORKOUT LOGGING
             </p>
+            <h1 className="mt-2 font-mono text-3xl tracking-tight">Log workout</h1>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-zinc-200/70 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-            <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <div className="space-y-4 md:space-y-6">
+          {error ? (
+            <div className="rounded-3xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-5 py-4 text-sm text-[color:var(--gb-muted)] backdrop-blur">
+              <span className="font-medium text-[color:var(--gb-fg)]">Fix:</span> {error}
+            </div>
+          ) : null}
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur md:p-8">
+            <label className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
               Title
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Push day"
-              className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
+              className="mt-3 w-full rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-4 py-3 text-sm outline-none focus:border-[color:var(--gb-accent)]"
             />
           </div>
 
-          <div className="rounded-3xl border border-zinc-200/70 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur md:p-8">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold tracking-tight">Exercises</p>
-              <button
-                type="button"
-                onClick={() => setExercises((prev) => [...prev, emptyExercise()])}
-                className="rounded-xl border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5"
-              >
-                Add
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setExercises((prev) => [...prev, emptyExercise()])}
+                  className="gb-btn rounded-xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-3 py-2 text-xs font-medium hover:bg-[color:var(--gb-card-strong)]"
+                >
+                  Add
+                </button>
             </div>
 
             <div className="mt-3 space-y-3">
               {exercises.map((ex, i) => (
-                <div
-                  key={i}
-                  className="rounded-3xl bg-zinc-50 p-3 dark:bg-white/5"
-                >
+                  <div
+                    key={i}
+                    className="rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card-strong)] p-4 md:p-5"
+                  >
                   <div className="flex items-center justify-between gap-3">
                     <input
                       value={ex.name}
                       onChange={(e) => updateExercise(i, { name: e.target.value })}
                       placeholder="Bench press"
-                      className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
+                      className="w-full rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-3 py-2 text-sm outline-none focus:border-[color:var(--gb-accent)]"
                     />
                     {exercises.length > 1 ? (
                       <button
                         type="button"
                         onClick={() => removeExercise(i)}
-                        className="shrink-0 rounded-2xl border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
+                        className="shrink-0 rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-3 py-2 text-xs font-medium text-[color:var(--gb-muted)] hover:bg-[color:var(--gb-card-strong)]"
                       >
                         Remove
                       </button>
@@ -183,7 +211,7 @@ export default function NewWorkoutPage() {
                       <button
                         type="button"
                         onClick={() => addSet(i)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:bg-black dark:text-zinc-200 dark:hover:bg-white/10"
+                          className="gb-btn inline-flex items-center gap-1 rounded-xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] px-3 py-2 text-xs font-medium hover:bg-[color:var(--gb-card-strong)]"
                         aria-label="Add set"
                       >
                         <Plus className="h-4 w-4" />
@@ -195,7 +223,7 @@ export default function NewWorkoutPage() {
                       {ex.sets.map((s, setIndex) => (
                         <div
                           key={setIndex}
-                          className="rounded-2xl bg-white p-3 ring-1 ring-zinc-200 dark:bg-black dark:ring-white/10"
+                          className="rounded-2xl bg-[color:var(--gb-bg)] p-3 ring-1 ring-[var(--gb-border)]"
                         >
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -206,7 +234,7 @@ export default function NewWorkoutPage() {
                               <button
                                 type="button"
                                 onClick={() => removeSet(i, setIndex)}
-                                className="rounded-xl px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/10"
+                                className="rounded-xl px-2 py-1 text-xs font-medium text-[color:var(--gb-muted)] hover:bg-[color:var(--gb-card-strong)]"
                               >
                                 Remove
                               </button>
@@ -214,15 +242,6 @@ export default function NewWorkoutPage() {
                           </div>
 
                           <div className="mt-2 grid grid-cols-2 gap-2">
-                            <input
-                              value={s.reps}
-                              onChange={(e) =>
-                                updateSet(i, setIndex, { reps: e.target.value })
-                              }
-                              inputMode="numeric"
-                              placeholder="Reps"
-                              className="rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
-                            />
                             <input
                               value={s.weightLb}
                               onChange={(e) =>
@@ -232,7 +251,16 @@ export default function NewWorkoutPage() {
                               }
                               inputMode="decimal"
                               placeholder="Weight (lb)"
-                              className="rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
+                              className="rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-3 py-2 text-sm outline-none focus:border-[color:var(--gb-accent)]"
+                            />
+                            <input
+                              value={s.reps}
+                              onChange={(e) =>
+                                updateSet(i, setIndex, { reps: e.target.value })
+                              }
+                              inputMode="numeric"
+                              placeholder="Reps"
+                              className="rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-3 py-2 text-sm outline-none focus:border-[color:var(--gb-accent)]"
                             />
                           </div>
                         </div>
@@ -244,8 +272,8 @@ export default function NewWorkoutPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-zinc-200/70 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-            <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-5 backdrop-blur md:p-8">
+            <label className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
               Notes (optional)
             </label>
             <textarea
@@ -253,15 +281,15 @@ export default function NewWorkoutPage() {
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="How it felt, what to improve next time..."
-              className="mt-2 w-full resize-none rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-zinc-400 dark:border-white/10 dark:bg-black"
+              className="mt-3 w-full resize-none rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-4 py-3 text-sm outline-none focus:border-[color:var(--gb-accent)]"
             />
           </div>
 
           <button
             type="button"
-            disabled={!canSave || saving}
+            disabled={saving}
             onClick={onSave}
-            className="w-full rounded-2xl bg-zinc-950 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-zinc-950"
+            className="gb-btn w-full rounded-2xl bg-[color:var(--gb-fg)] py-3 text-sm font-semibold text-[color:var(--gb-bg)] disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save workout"}
           </button>
@@ -269,7 +297,7 @@ export default function NewWorkoutPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-full rounded-2xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-900 dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50"
+            className="gb-btn w-full rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-card)] py-3 text-sm font-semibold text-[color:var(--gb-fg)] hover:bg-[color:var(--gb-card-strong)]"
           >
             Cancel
           </button>

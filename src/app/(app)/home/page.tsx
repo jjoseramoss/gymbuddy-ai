@@ -1,77 +1,206 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { TopBar } from "@/components/TopBar";
+import type { Workout } from "@/lib/types";
+import { useWorkouts } from "@/lib/useWorkouts";
+
+function dateKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function computeStreak(workouts: Workout[]) {
+  const days = new Set<string>();
+  for (const w of workouts) {
+    const dt = new Date(w.completedAt);
+    if (Number.isNaN(dt.getTime())) continue;
+    days.add(dateKey(dt));
+  }
+
+  let streak = 0;
+  let cursor = startOfDay(new Date());
+  while (days.has(dateKey(cursor))) {
+    streak += 1;
+    cursor = new Date(cursor);
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}
+
+function computeWeeklySignal(workouts: Workout[]) {
+  const now = new Date();
+  const cutoff = new Date(now);
+  cutoff.setDate(now.getDate() - 6);
+  cutoff.setHours(0, 0, 0, 0);
+
+  const buckets = Array.from({ length: 7 }, () => 0);
+  for (const w of workouts) {
+    const dt = new Date(w.completedAt);
+    if (Number.isNaN(dt.getTime())) continue;
+    if (dt < cutoff) continue;
+
+    const dayIndex = Math.min(
+      6,
+      Math.max(0, Math.floor((startOfDay(dt).getTime() - cutoff.getTime()) / 86_400_000))
+    );
+
+    let volume = 0;
+    for (const ex of w.exercises) {
+      for (const s of ex.sets) {
+        if (typeof s.reps !== "number") continue;
+        if (typeof s.weightLb !== "number") continue;
+        volume += s.reps * s.weightLb;
+      }
+    }
+    buckets[dayIndex] += volume;
+  }
+
+  return buckets;
+}
 
 export default function HomePage() {
+  const workouts = useWorkouts() as Workout[];
+
+  const streak = useMemo(() => computeStreak(workouts), [workouts]);
+  const weekly = useMemo(() => computeWeeklySignal(workouts), [workouts]);
+  const weeklyTotal = useMemo(
+    () => weekly.reduce((acc, v) => acc + v, 0),
+    [weekly]
+  );
+
+  const todayTargetHours = 1.5;
+
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[color:var(--gb-bg)] text-[color:var(--gb-fg)]">
       <TopBar title="GymBuddy" />
 
-      <main className="px-4 pt-5 md:px-6 md:pt-8">
-        <div className="hidden items-end justify-between md:flex">
+      <main className="px-4 pt-5 md:px-12 md:pt-12">
+        <div className="hidden items-start justify-between md:flex">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Home</h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Quick overview and shortcuts.
+            <p className="font-mono text-xs tracking-[0.25em] text-[color:var(--gb-muted)]">
+              TRACK · TRAIN · TRIUMPH
             </p>
+            <h1 className="mt-2 font-mono text-4xl tracking-tight">Dashboard</h1>
           </div>
+          <Link
+            href="/workouts/new"
+            className="gb-btn rounded-2xl bg-[color:var(--gb-bg)] px-6 py-3 text-sm font-semibold text-[color:var(--gb-fg)] shadow-sm ring-1 ring-[var(--gb-border)] hover:bg-[color:var(--gb-card)]"
+          >
+            Log workout
+          </Link>
         </div>
 
-        <section className="rounded-3xl bg-gradient-to-br from-zinc-950 to-zinc-700 p-5 text-white">
-          <p className="text-xs font-medium text-white/70">Today</p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight">
-            Ready to train smarter?
-          </h2>
-          <p className="mt-2 text-sm text-white/80">
-            Log a workout, then get quick coaching.
-          </p>
-          <div className="mt-4 flex gap-2">
-            <Link
-              href="/workouts/new"
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-medium text-zinc-950"
-            >
-              Log workout
-            </Link>
-            <Link
-              href="/coach"
-              className="inline-flex items-center justify-center rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/20"
-            >
-              Ask coach
-            </Link>
+        <section className="grid gap-4 md:grid-cols-[2fr_1fr_1fr] md:gap-6">
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+              TODAY’S TARGET
+            </p>
+            <p className="mt-4 font-mono text-4xl leading-none">
+              {todayTargetHours.toFixed(1)}
+            </p>
+            <p className="mt-2 text-sm text-[color:var(--gb-muted)]">hours trained</p>
+            <div className="mt-4 h-3 w-full rounded-full bg-[color:var(--gb-border)]">
+              <div className="h-3 w-[55%] rounded-full bg-[color:var(--gb-accent)]" />
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/workouts/new"
+                className="gb-btn rounded-2xl bg-[color:var(--gb-accent)] px-4 py-2 text-sm font-semibold text-[color:var(--gb-accent-fg)]"
+              >
+                Start session
+              </Link>
+              <Link
+                href="/coach"
+                className="gb-btn rounded-2xl border border-[var(--gb-border)] bg-[color:var(--gb-bg)] px-4 py-2 text-sm font-semibold"
+              >
+                Ask AI Buddy
+              </Link>
+            </div>
+          </div>
+
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+              STREAK
+            </p>
+            <p className="mt-4 font-mono text-4xl leading-none">{streak}</p>
+            <p className="mt-2 text-sm text-[color:var(--gb-muted)]">days in a row</p>
+          </div>
+
+          <div className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+              WORKOUTS
+            </p>
+            <p className="mt-4 font-mono text-4xl leading-none">{workouts.length}</p>
+            <p className="mt-2 text-sm text-[color:var(--gb-muted)]">total logged</p>
           </div>
         </section>
 
-        <section className="mt-5">
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            Quick actions
-          </h3>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <Link
-              href="/workouts"
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 text-sm font-medium text-zinc-950 shadow-sm dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50"
-            >
-              View workouts
-              <p className="mt-1 text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                Your recent logs
+        <section className="gb-card mt-6 rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+                WEEKLY SIGNAL
               </p>
-            </Link>
-            <Link
-              href="/profile"
-              className="rounded-2xl border border-zinc-200/70 bg-white p-4 text-sm font-medium text-zinc-950 shadow-sm dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50"
-            >
-              Profile
-              <p className="mt-1 text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                Goals & settings
+              <p className="mt-2 font-mono text-3xl">
+                {Math.round(weeklyTotal).toLocaleString()}
               </p>
-            </Link>
+              <p className="mt-1 text-sm text-[color:var(--gb-muted)]">volume score</p>
+            </div>
+            <div className="flex h-16 items-end gap-2">
+              {weekly.map((v, idx) => {
+                const max = Math.max(...weekly, 1);
+                const h = Math.round((v / max) * 100);
+                return (
+                  <div
+                    key={idx}
+                    className={
+                      "w-5 rounded-xl " +
+                      (idx === weekly.length - 1
+                        ? "bg-[color:var(--gb-accent)]"
+                        : "bg-[color:var(--gb-border)]")
+                    }
+                    style={{ height: `${Math.max(10, Math.round((h / 100) * 64))}px` }}
+                  />
+                );
+              })}
+            </div>
           </div>
         </section>
 
-        <section className="mt-6 rounded-3xl border border-zinc-200/70 bg-white p-5 dark:border-white/10 dark:bg-zinc-950">
-          <h3 className="text-sm font-semibold">MVP status</h3>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            This is frontend-only (mock storage). Next step: wire Supabase + auth.
-          </p>
+        <section className="mt-6 grid grid-cols-2 gap-4 md:gap-6">
+          <Link
+            href="/workouts"
+            className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8"
+          >
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+              WORKOUTS
+            </p>
+            <p className="mt-2 text-lg font-semibold">View logs</p>
+            <p className="mt-1 text-sm text-[color:var(--gb-muted)]">
+              Recent sessions and stats
+            </p>
+          </Link>
+          <Link
+            href="/profile"
+            className="gb-card rounded-[2rem] border border-[var(--gb-border)] bg-[color:var(--gb-card)] p-6 backdrop-blur md:p-8"
+          >
+            <p className="font-mono text-[10px] tracking-[0.25em] text-[color:var(--gb-muted)]">
+              PROFILE
+            </p>
+            <p className="mt-2 text-lg font-semibold">Settings</p>
+            <p className="mt-1 text-sm text-[color:var(--gb-muted)]">
+              Goals and preferences
+            </p>
+          </Link>
         </section>
       </main>
     </div>
