@@ -63,6 +63,13 @@ export default function ProfilePage() {
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             Auth isn’t wired yet. This MVP uses local storage.
           </p>
+
+          <a
+            href="/logout"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-zinc-200 bg-white py-3 text-sm font-medium text-zinc-900 dark:border-white/10 dark:bg-black dark:text-zinc-50"
+          >
+            Log out
+          </a>
         </section>
       </main>
     </div>
